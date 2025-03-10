@@ -44,10 +44,10 @@ class Component {
     __publicField(this, "state");
     this.$target = $target;
     this.props = props;
-    this.setup();
+    this.state = this.setUp();
     this.render();
   }
-  setup() {
+  setUp() {
   }
   template() {
     return "";
@@ -84,6 +84,24 @@ const label = {
   distance: "거리(도보 이동 시간)",
   description: "설명",
   link: "참고 링크"
+};
+const Dropdown = ({ id, required, optionValue }) => {
+  return `
+  <div id="${id}" class="form-item ${"form-item--required"}">
+    <label for="${id} text-caption">${label[id]}</label>
+    <select name="${id}" class="option" ${required}}>
+      <option value="">선택해 주세요</option>
+      ${Object.entries(optionValue).map(([key, value]) => `<option value="${key}">${value}</option>`).join("")}    
+    </select>
+  </div>
+  `;
+};
+const Input = ({ id, required, type }) => {
+  return `
+  <div id="name" class="form-item ${required ? "form-item--required" : ""}">
+      <label for="${id} text-caption">${label[id]}</label>
+      <input type="${type}" name="${id}" ${required}>
+    </div>`;
 };
 const RestaurantData = [
   {
@@ -134,142 +152,6 @@ const RestaurantData = [
     imgAlt: "기타"
   }
 ];
-const addData = () => {
-  const formData = new FormData(document.getElementById("input-form"));
-  const submittedData = Object.fromEntries(formData);
-  const information = {
-    name: submittedData.name,
-    distance: Number(submittedData.distance),
-    description: submittedData.description,
-    imgSrc: `./category-${submittedData.category}.png`,
-    imgAlt: `${categoryValue[submittedData.category]}`
-  };
-  RestaurantData.push(information);
-};
-class Dropdown extends Component {
-  constructor($target, props) {
-    super($target, props);
-  }
-  template() {
-    return `
-          <label for="${this.$target.getAttribute("id")} text-caption">${label[this.$target.getAttribute("id")]}</label>
-    <select name="${this.$target.getAttribute("id")}" class="option" required>
-                  <option value="">선택해 주세요</option>
-            </select>
-            `;
-  }
-  render() {
-    this.$target.innerHTML = this.template();
-    this.setEvent();
-    this.updateOptions();
-  }
-  updateOptions() {
-    const optionValue = this.props;
-    for (const [key, value] of Object.entries(optionValue)) {
-      this.$target.querySelector(".option").innerHTML += `<option value="${key}">${value}</option>
-`;
-    }
-  }
-}
-class Input extends Component {
-  constructor($target, props) {
-    super($target, props);
-  }
-  template() {
-    const { required, type } = this.props;
-    return `
-    <label for="${this.$target.getAttribute("id")} text-caption">${label[this.$target.getAttribute("id")]}</label>
-    <input type="${type}" name="${this.$target.getAttribute("id")}" id="${this.$target.getAttribute("id")}" ${required}>
-
-            `;
-  }
-}
-const createModalInputs = () => {
-  new Dropdown(document.getElementById("category"), categoryValue);
-  new Input(document.getElementById("name"), {
-    required: "required",
-    type: "text"
-  });
-  new Dropdown(document.getElementById("distance"), distanceValue);
-  new Input(document.getElementById("description"), {
-    required: "",
-    type: "text"
-  });
-  new Input(document.getElementById("link"), { required: "", type: "url" });
-};
-class Modal extends Component {
-  constructor($target) {
-    super($target);
-  }
-  template() {
-    return `<div class="modal-backdrop"></div>
-    <div class="modal-container">
-      <h2 class="modal-title text-title">새로운 음식점</h2>
-      <form id='input-form'>
-
-      <div id="category" class="form-item form-item--required"></div>
-
-        <div id="name" class="form-item form-item--required">
-        </div>
-
-        <div id="distance" class="form-item form-item--required"></div>
-
-        <div id="description" class="form-item"></div>
-
-        <div id="link" class="form-item"></div>
-
-        <div class="button-container">
-          <button type="button" class="button button--secondary text-caption">취소하기</button>
-          <button class="button button--primary text-caption">추가하기</button>
-        </div>
-      </form>
-    </div>
-    `;
-  }
-  render() {
-    this.$target.innerHTML = this.template();
-    this.setEvent();
-    createModalInputs();
-  }
-  setEvent() {
-    const modalContainer = document.querySelector(".modal");
-    this.$target.querySelector(".modal-backdrop").addEventListener("click", () => {
-      modalContainer.classList.toggle("modal--open");
-    });
-    this.$target.querySelector(".button.button--secondary.text-caption").addEventListener("click", () => {
-      modalContainer.classList.toggle("modal--open");
-    });
-    this.submitForm();
-  }
-  submitForm() {
-    document.getElementById("input-form").addEventListener("submit", (event) => {
-      event.preventDefault();
-      const modalContainer = document.querySelector(".modal");
-      modalContainer.classList.toggle("modal--open");
-      addData();
-      document.dispatchEvent(new CustomEvent("restaurantUpdated"));
-    });
-  }
-}
-class Header extends Component {
-  constructor($target) {
-    super($target);
-  }
-  template() {
-    return `
-    <h1 class="gnb__title text-title">점심 뭐 먹지</h1>
-      <button type="button" class="gnb__button" aria-label="음식점 추가">
-        <img src="./add-button.png" alt="음식점 추가" />
-      </button>`;
-  }
-  setEvent() {
-    this.$target.querySelector(".gnb__button").addEventListener("click", () => {
-      const modalContainer = document.querySelector(".modal");
-      new Modal(modalContainer);
-      modalContainer.classList.toggle("modal--open");
-    });
-  }
-}
 class Restaurant extends Component {
   constructor($target, props) {
     super($target, props);
@@ -298,25 +180,129 @@ class Restaurant extends Component {
       `;
   }
 }
+const addData = () => {
+  const formData = new FormData(document.getElementById("input-form"));
+  const submittedData = Object.fromEntries(formData);
+  const information = {
+    name: submittedData.name,
+    distance: Number(submittedData.distance),
+    description: submittedData.description,
+    imgSrc: `./category-${submittedData.category}.png`,
+    imgAlt: `${categoryValue[submittedData.category]}`
+  };
+  RestaurantData.push(information);
+  document.dispatchEvent(new CustomEvent("restaurantUpdated"));
+};
+class Modal extends Component {
+  constructor($target, props) {
+    super($target, props);
+  }
+  template() {
+    const { isModalOpen } = this.props;
+    return `<div class="modal-backdrop"></div>
+    <div class="modal-container">
+      <h2 class="modal-title text-title">새로운 음식점</h2>
+      <form id='input-form'>
+
+        ${Dropdown({ id: "category", required: "required", optionValue: categoryValue })}
+        ${Input({ id: "name", required: "required", type: "text" })}
+        ${Dropdown({ id: "distance", required: "required", optionValue: distanceValue })}
+        ${Input({ id: "description", required: "", type: "text" })}
+        ${Input({ id: "link", required: "", type: "url" })}
+
+        <div class="button-container">
+          <button type="button" class="button button--secondary text-caption">취소하기</button>
+          <button class="button button--primary text-caption">추가하기</button>
+        </div>
+      </form>
+    </div>
+    `;
+  }
+  render() {
+    super.render();
+    if (this.props.isModalOpen) {
+      this.$target.classList.add("modal--open");
+    } else {
+      this.$target.classList.remove("modal--open");
+    }
+  }
+  setEvent() {
+    const { toggleModal } = this.props;
+    this.$target.querySelector(".modal-backdrop").addEventListener("click", () => {
+      this.props.toggleModal();
+    });
+    this.$target.querySelector(".button.button--secondary.text-caption").addEventListener("click", () => {
+      this.props.toggleModal();
+    });
+    this.submitForm();
+  }
+  submitForm() {
+    document.getElementById("input-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      addData();
+      this.props.toggleModal();
+    });
+  }
+}
+class Header extends Component {
+  constructor($target, props) {
+    super($target, props);
+  }
+  template() {
+    return `
+    <h1 class="gnb__title text-title">점심 뭐 먹지</h1>
+      <button type="button" class="gnb__button" aria-label="음식점 추가">
+        <img src="./add-button.png" alt="음식점 추가" />
+      </button>`;
+  }
+  setEvent() {
+    this.$target.querySelector(".gnb__button").addEventListener("click", () => {
+      this.props.toggleModal();
+    });
+  }
+}
 const createRestaurant = () => {
-  RestaurantData.forEach((data) => {
-    const restaurantItem = document.createElement("li");
-    restaurantItem.classList.add("restaurant");
-    document.querySelector(".restaurant-list").appendChild(restaurantItem);
-    new Restaurant(restaurantItem, data);
-  });
+  const restaurantList = document.querySelector(".restaurant-list");
+  if (restaurantList.childElementCount === 0) {
+    RestaurantData.forEach((data) => {
+      const restaurantItem = document.createElement("li");
+      restaurantItem.classList.add("restaurant");
+      new Restaurant(restaurantItem, data);
+      restaurantList.appendChild(restaurantItem);
+    });
+  }
 };
 class App extends Component {
   constructor($target) {
     super($target);
-    document.addEventListener("restaurantUpdated", () => this.render());
+    this.state = this.setUp();
+    document.addEventListener("restaurantUpdated", this.addNewRestaurant);
+  }
+  setUp() {
+    return { isModalOpen: false };
   }
   render() {
-    document.querySelector(".restaurant-list").innerHTML = "";
-    new Header(document.querySelector(".gnb"));
+    new Header(document.querySelector(".gnb"), {
+      toggleModal: () => this.toggleModal()
+    });
+    new Modal(document.querySelector(".modal"), {
+      isModalOpen: this.state.isModalOpen,
+      toggleModal: () => this.toggleModal()
+    });
     createRestaurant();
   }
+  toggleModal() {
+    this.setState({ isModalOpen: !this.state.isModalOpen });
+  }
+  addNewRestaurant() {
+    const restaurantList = document.querySelector(".restaurant-list");
+    const newRestaurant = RestaurantData[RestaurantData.length - 1];
+    if (newRestaurant) {
+      const restaurantItem = document.createElement("li");
+      restaurantItem.classList.add("restaurant");
+      new Restaurant(restaurantItem, newRestaurant);
+      restaurantList.appendChild(restaurantItem);
+    }
+  }
 }
-document.addEventListener("DOMContentLoaded", () => {
-  new App(document.getElementById("app"));
-});
+new App(document.getElementById("app"));

@@ -15,43 +15,69 @@ body {
   font-size: 16px;
 }
 
-/* GNB ********************************************/
+/* Colors *****************************************/
 
-.gnb {
+:root {
+  --primary-color: #ec4a0a;
+  --lighten-color: #f6a88a;
+  --grey-100: #ffffff;
+  --grey-200: #d0d5dd;
+  --grey-300: #667085;
+  --grey-400: #344054;
+  --grey-500: #000000;
+}
+
+/* Typography *************************************/
+
+.text-title {
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+.text-subtitle {
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+.text-body {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+}
+
+.text-caption {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+}
+
+/* 카테고리/정렬 필터 */
+
+.restaurant-filter-container {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  height: 64px;
 
   padding: 0 16px;
-
-  background-color: var(--primary-color);
+  margin-top: 24px;
 }
 
-.gnb__title {
-  color: #fcfcfd;
-}
+.restaurant-filter-container select {
+  height: 44px;
+  min-width: 125px;
 
-.gnb__button {
-  height: 40px;
-
-  border: none;
+  border: 1px solid #d0d5dd;
   border-radius: 8px;
   background: transparent;
 
-  font-size: 24px;
-  cursor: pointer;
+  font-size: 16px;
 }
 
-.gnb__button img {
-  display: block;
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
+.restaurant-filter {
+  padding: 8px;
 }
-
 /* 음식점 추가 모달 *****************************************/
-
 .modal {
   display: none;
 }
@@ -67,7 +93,6 @@ body {
   right: 0;
   bottom: 0;
   left: 0;
-
   background: rgba(0, 0, 0, 0.35);
 }
 
@@ -75,9 +100,7 @@ body {
   position: fixed;
   bottom: 0;
   width: 100%;
-
   padding: 32px 16px;
-
   border-radius: 8px 8px 0px 0px;
   background: var(--grey-100);
   animation:
@@ -196,9 +219,40 @@ input[name="link"] {
     transform: translateY(100%);
   }
 }
+/* GNB ********************************************/
+.gnb {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 64px;
 
+  padding: 0 16px;
+
+  background-color: var(--primary-color);
+}
+
+.gnb__title {
+  color: #fcfcfd;
+}
+
+.gnb__button {
+  height: 40px;
+
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.gnb__button img {
+  display: block;
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
 /* 음식점 목록 */
-
 .restaurant-list-container {
   display: flex;
   flex-direction: column;
@@ -259,67 +313,4 @@ input[name="link"] {
   text-overflow: ellipsis;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-}
-
-/* Colors *****************************************/
-
-:root {
-  --primary-color: #ec4a0a;
-  --lighten-color: #f6a88a;
-  --grey-100: #ffffff;
-  --grey-200: #d0d5dd;
-  --grey-300: #667085;
-  --grey-400: #344054;
-  --grey-500: #000000;
-}
-
-/* Typography *************************************/
-
-.text-title {
-  font-size: 20px;
-  line-height: 24px;
-  font-weight: 600;
-}
-
-.text-subtitle {
-  font-size: 18px;
-  line-height: 28px;
-  font-weight: 600;
-}
-
-.text-body {
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-}
-
-.text-caption {
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 400;
-}
-
-/* 카테고리/정렬 필터 */
-
-.restaurant-filter-container {
-  display: flex;
-  justify-content: space-between;
-
-  padding: 0 16px;
-  margin-top: 24px;
-}
-
-.restaurant-filter-container select {
-  height: 44px;
-  min-width: 125px;
-
-  border: 1px solid #d0d5dd;
-  border-radius: 8px;
-  background: transparent;
-
-  font-size: 16px;
-}
-
-.restaurant-filter {
-  padding: 8px;
 }
