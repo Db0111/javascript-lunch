@@ -158,25 +158,14 @@ class Restaurant extends Component {
   }
   template() {
     const { name, distance, description, imgSrc, imgAlt } = this.props;
-    return ` 
-              <div class="restaurant__category">
-                  <img
-                    src=${imgSrc}
-                    alt=${imgAlt}
-                    class="category-icon"
-                  />
+    return `    <div class="restaurant__category">
+                  <img src=${imgSrc} alt=${imgAlt} class="category-icon"/>
                 </div>
                 <div class="restaurant__info">
                   <h3 class="restaurant__name text-subtitle">${name}</h3>
-                  <span class="restaurant__distance text-body"
-                    >캠퍼스부터 ${distance}분 내</span
-                  >
-                  <p class="restaurant__description text-body">
-                  ${description}
-                  </p>
+                  <span class="restaurant__distance text-body">캠퍼스부터 ${distance}분 내</span>
+                  <p class="restaurant__description text-body">${description}</p>
                 </div>
-              
-
       `;
   }
 }
@@ -198,25 +187,11 @@ class Modal extends Component {
     super($target, props);
   }
   template() {
-    const { isModalOpen } = this.props;
+    const { isModalOpen, content } = this.props;
     return `<div class="modal-backdrop"></div>
     <div class="modal-container">
-      <h2 class="modal-title text-title">새로운 음식점</h2>
-      <form id='input-form'>
-
-        ${Dropdown({ id: "category", required: "required", optionValue: categoryValue })}
-        ${Input({ id: "name", required: "required", type: "text" })}
-        ${Dropdown({ id: "distance", required: "required", optionValue: distanceValue })}
-        ${Input({ id: "description", required: "", type: "text" })}
-        ${Input({ id: "link", required: "", type: "url" })}
-
-        <div class="button-container">
-          <button type="button" class="button button--secondary text-caption">취소하기</button>
-          <button class="button button--primary text-caption">추가하기</button>
-        </div>
-      </form>
-    </div>
-    `;
+      ${content}
+    </div>`;
   }
   render() {
     super.render();
@@ -272,6 +247,22 @@ const createRestaurant = () => {
     });
   }
 };
+const getModalContent = (type) => {
+  {
+    return ` <h2 class="modal-title text-title">새로운 음식점</h2>
+        <form id='input-form'>
+          ${Dropdown({ id: "category", required: "required", optionValue: categoryValue })}
+          ${Input({ id: "name", required: "required", type: "text" })}
+          ${Dropdown({ id: "distance", required: "required", optionValue: distanceValue })}
+          ${Input({ id: "description", required: "", type: "text" })}
+          ${Input({ id: "link", required: "", type: "url" })}
+          <div class="button-container">
+            <button type="button" class="button button--secondary text-caption">취소하기</button>
+            <button class="button button--primary text-caption">추가하기</button>
+          </div>
+        </form>`;
+  }
+};
 class App extends Component {
   constructor($target) {
     super($target);
@@ -287,7 +278,8 @@ class App extends Component {
     });
     new Modal(document.querySelector(".modal"), {
       isModalOpen: this.state.isModalOpen,
-      toggleModal: () => this.toggleModal()
+      toggleModal: () => this.toggleModal(),
+      content: getModalContent()
     });
     createRestaurant();
   }
