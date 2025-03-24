@@ -127,6 +127,18 @@ class Component {
     this.render();
   }
 }
+const storageUtil = {
+  add(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  },
+  get(key) {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : null;
+  },
+  remove(key) {
+    localStorage.removeItem(key);
+  }
+};
 class IconButton extends Component {
   initState() {
     const savedFavorites = JSON.parse(
@@ -150,9 +162,7 @@ class IconButton extends Component {
         e.stopPropagation();
         const newState = !this.state.isButtonClicked;
         this.setState({ isButtonClicked: newState });
-        const savedFavorites = JSON.parse(
-          localStorage.getItem("favoriteRestaurantList") || "[]"
-        );
+        const savedFavorites = storageUtil.get("favoriteRestaurantList") || "[]";
         let updatedFavorites = [...savedFavorites];
         if (newState) {
           if (!updatedFavorites.includes(this.props.restaurantId)) {
@@ -163,10 +173,7 @@ class IconButton extends Component {
             (id) => id !== this.props.restaurantId
           );
         }
-        localStorage.setItem(
-          "favoriteRestaurantList",
-          JSON.stringify(updatedFavorites)
-        );
+        storageUtil.add("favoriteRestaurantList", updatedFavorites);
         document.dispatchEvent(
           new CustomEvent("favoriteUpdated", {
             detail: {
@@ -185,13 +192,6 @@ const categoryValue = {
   western: "양식",
   asian: "아시안",
   etc: "기타"
-};
-const distanceValue = {
-  5: "5분 내",
-  10: "10분 내",
-  15: "15분 내",
-  20: "20분 내",
-  30: "30분 내"
 };
 const label = {
   category: "카테고리",
@@ -343,21 +343,45 @@ const Input = ({ id, required, type }) => {
       <input type="${type}" name="${id}" ${required}>
     </div>`;
 };
-const addResturantContent = () => {
+const distanceValue = {
+  5: "5분 내",
+  10: "10분 내",
+  15: "15분 내",
+  20: "20분 내",
+  30: "30분 내"
+};
+const categoryDropdown = Dropdown({
+  id: "category",
+  required: "required",
+  optionValue: categoryValue
+});
+const nameInput = Input({ id: "name", required: "required", type: "text" });
+const distanceDropdown = Dropdown({
+  id: "distance",
+  required: "required",
+  optionValue: distanceValue
+});
+const descriptionInput = Input({
+  id: "description",
+  required: "",
+  type: "text"
+});
+const linkInput = Input({ id: "link", required: "", type: "url" });
+const AddRestaurantContent = () => {
   return ` <h2 class="modal-title text-title">새로운 음식점</h2>
         <form id='input-form'>
-          ${Dropdown({ id: "category", required: "required", optionValue: categoryValue })}
-          ${Input({ id: "name", required: "required", type: "text" })}
-          ${Dropdown({ id: "distance", required: "required", optionValue: distanceValue })}
-          ${Input({ id: "description", required: "", type: "text" })}
-          ${Input({ id: "link", required: "", type: "url" })}
+          ${categoryDropdown}
+          ${nameInput}
+          ${distanceDropdown}
+          ${descriptionInput}
+          ${linkInput}
           <div class="button-container">
             <button type="button" class="button button--secondary text-caption">취소하기</button>
             <button class="button button--primary text-caption">추가하기</button>
           </div>
         </form>`;
 };
-const restaurantInfoContent = (data = {}) => {
+const RestaurantInfoContent = (data = {}) => {
   return `
     <div id="restaurant_info_content" data-restaurant-id="${data.id}">
       <div class="modal-header">
@@ -428,10 +452,6 @@ class FilterDropdown extends Component {
       this.props.onChange(e.target.value);
     });
   }
-  setState(newState) {
-    this.props.selectedValue = newState.selectedValue;
-    this.render();
-  }
 }
 const createCategoryFilter = (onChange, selectedCategory) => {
   return new FilterDropdown(
@@ -459,7 +479,9 @@ const filterByCategory = (restaurants, category) => {
   if (category === "전체") {
     return restaurants;
   }
-  return restaurants.filter((restaurant) => restaurant.category === category);
+  return restaurants.filter(
+    (restaurant) => restaurant.category === category
+  );
 };
 const getRestaurant = (data) => {
   return `<div class="restaurant__category">
@@ -508,46 +530,95 @@ const sortByOption = (restaurants, sortOption) => {
     );
   }
 };
-class App extends Component {
+class App {
   constructor($target) {
-    super($target);
+    __publicField(this, "toggleModal", (restaurantData = null) => {
+      this.state = {
+        ...this.state,
+        isModalOpen: !this.state.isModalOpen,
+        selectedRestaurant: restaurantData
+      };
+      this.render();
+    });
+    __publicField(this, "activateMain", (event) => {
+      const { targetTabTitle } = event.detail;
+      this.state = {
+        ...this.state,
+        activeTab: targetTabTitle
+      };
+      this.tab.updateActiveTab(targetTabTitle);
+      this.render();
+    });
+    __publicField(this, "updateRestaurant", (event) => {
+      const newRestaurantList = [...this.state.restaurantList];
+      newRestaurantList.push(event.detail.information);
+      storageUtil.add("restaurantList", newRestaurantList);
+      this.state = {
+        ...this.state,
+        restaurantList: newRestaurantList
+      };
+      this.render();
+    });
+    __publicField(this, "deleteRestaurant", (event) => {
+      const restaurantId = event.detail.restaurantId;
+      const newRestaurantList = this.state.restaurantList.filter(
+        (restaurant) => restaurant.id !== restaurantId
+      );
+      storageUtil.add("restaurantList", newRestaurantList);
+      const newFavoriteRestaurants = this.state.favoriteRestaurants.filter(
+        (id) => id !== restaurantId
+      );
+      storageUtil.add("favoriteRestaurantList", newFavoriteRestaurants);
+      this.state = {
+        ...this.state,
+        restaurantList: newRestaurantList,
+        favoriteRestaurants: newFavoriteRestaurants,
+        selectedRestaurant: null
+      };
+      this.render();
+    });
+    this.$target = $target;
     this.state = this.initState();
     this.tab = new Tab(document.querySelector(".tab-container"), {
       activeTab: this.state.activeTab
     });
-    this.activateMain = this.activateMain.bind(this);
-    this.updateRestaurant = this.updateRestaurant.bind(this);
-    this.deleteRestaurant = this.deleteRestaurant.bind(this);
-    document.addEventListener("tabClicked", this.activateMain);
-    document.addEventListener("restaurantUpdated", this.updateRestaurant);
-    document.addEventListener("restaurantDeleted", this.deleteRestaurant);
-    document.addEventListener(
-      "favoriteUpdated",
-      (event) => this.state.favoriteRestaurants = event.detail.favoriteRestaurants
-    );
+    this.setupEventListeners();
+    this.render();
   }
   initState() {
-    const savedData = localStorage.getItem("restaurantList");
-    const savedFavorites = localStorage.getItem("favoriteRestaurantList");
+    const savedData = storageUtil.get("restaurantList");
+    const savedFavorites = storageUtil.get("favoriteRestaurantList");
     if (!savedData) {
-      localStorage.setItem("restaurantList", JSON.stringify(RestaurantData));
+      storageUtil.add("restaurantList", RestaurantData);
     }
     if (!savedFavorites) {
-      localStorage.setItem("favoriteRestaurantList", JSON.stringify([]));
+      storageUtil.add("favoriteRestaurantList", []);
     }
     return {
       isModalOpen: false,
-      restaurantList: savedData ? JSON.parse(savedData) : [...RestaurantData],
-      favoriteRestaurants: savedFavorites ? JSON.parse(savedFavorites) : [],
+      restaurantList: savedData ? savedData : [...RestaurantData],
+      favoriteRestaurants: savedFavorites ? savedFavorites : [],
       selectedCategory: "전체",
       sortOption: "name",
       selectedRestaurant: null,
       activeTab: "all"
     };
   }
+  setupEventListeners() {
+    document.addEventListener("tabClicked", this.activateMain);
+    document.addEventListener("restaurantUpdated", this.updateRestaurant);
+    document.addEventListener("restaurantDeleted", this.deleteRestaurant);
+    document.addEventListener("favoriteUpdated", (event) => {
+      this.state = {
+        ...this.state,
+        favoriteRestaurants: event.detail.favoriteRestaurants
+      };
+      this.render();
+    });
+  }
   render() {
     new Header(document.querySelector(".gnb"), {
-      toggleModal: () => this.toggleModal()
+      toggleModal: this.toggleModal
     });
     if (this.state.activeTab === "all") {
       this.showAllRestaurants();
@@ -556,8 +627,8 @@ class App extends Component {
     }
     new Modal(document.querySelector(".modal"), {
       isModalOpen: this.state.isModalOpen,
-      toggleModal: () => this.toggleModal(),
-      content: this.state.selectedRestaurant ? restaurantInfoContent(this.state.selectedRestaurant) : addResturantContent(),
+      toggleModal: this.toggleModal,
+      content: this.state.selectedRestaurant ? RestaurantInfoContent(this.state.selectedRestaurant) : AddRestaurantContent(),
       modalType: this.state.selectedRestaurant ? "info" : "add"
     });
   }
@@ -580,66 +651,26 @@ class App extends Component {
       this.toggleModal(restaurant);
     });
   }
-  toggleModal(restaurantData = null) {
-    this.setState({
-      isModalOpen: !this.state.isModalOpen,
-      restaurantList: this.state.restaurantList,
-      selectedRestaurant: restaurantData
-    });
-  }
-  activateMain(event) {
-    const { targetTabTitle } = event.detail;
-    this.setState({
-      activeTab: targetTabTitle
-    });
-    this.tab.updateActiveTab(targetTabTitle);
-  }
   filterRestaurants(selectedCategory) {
     const filtered = filterByCategory(
-      JSON.parse(localStorage.getItem("restaurantList")),
+      storageUtil.get("restaurantList"),
       selectedCategory
     );
-    this.setState({
+    this.state = {
+      ...this.state,
       restaurantList: filtered,
       selectedCategory
-    });
+    };
+    this.render();
   }
   sortRestaurants(sortOption) {
     const sorted = sortByOption(this.state.restaurantList, sortOption);
-    this.setState({
+    this.state = {
+      ...this.state,
       restaurantList: sorted,
       sortOption
-    });
-  }
-  updateRestaurant(event) {
-    const newRestaurantList = [...this.state.restaurantList];
-    newRestaurantList.push(event.detail.information);
-    localStorage.setItem("restaurantList", JSON.stringify(newRestaurantList));
-    this.setState({
-      restaurantList: newRestaurantList,
-      selectedCategory: this.state.selectedCategory,
-      sortOption: this.state.sortOption
-    });
-  }
-  deleteRestaurant(event) {
-    const restaurantId = event.detail.restaurantId;
-    let restaurantIndex = -1;
-    this.state.restaurantList.forEach((restaurant, index) => {
-      if (restaurant.id === restaurantId) {
-        restaurantIndex = index;
-      }
-    });
-    this.state.restaurantList.splice(restaurantIndex, 1);
-    localStorage.setItem(
-      "restaurantList",
-      JSON.stringify([...this.state.restaurantList])
-    );
-    this.setState({
-      restaurantList: this.state.restaurantList,
-      selectedCategory: this.state.selectedCategory,
-      sortOption: this.state.sortOption,
-      selectedRestaurant: null
-    });
+    };
+    this.render();
   }
 }
 new App(document.getElementById("app"));
